@@ -1,20 +1,45 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
-import { UsersService } from './users.service';
+import { UserService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
 
 describe('UsersController', () => {
-  let controller: UsersController;
+  let usersController: UsersController;
+  let usersService: UserService;
+
+  const mockUserService = {
+    createUser: jest.fn((userData) => {
+      return {
+        id: 1,
+        ...userData,
+      };
+    }),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [UsersService],
+      providers: [
+        {
+          provide: UserService,
+          useValue: mockUserService,
+        },
+      ],
     }).compile();
 
-    controller = module.get<UsersController>(UsersController);
+    usersController = module.get<UsersController>(UsersController);
+    usersService = module.get<UserService>(UserService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  describe('signUser', () => {
+    it('should create a user and return it', async () => {
+      const userData = { name: 'John Doe', email: 'john@example.com' };
+      expect(await usersController.signUser(userData)).toEqual({
+        id: 1,
+        ...userData,
+      });
+      expect(usersService.createUser).toHaveBeenCalledWith(userData);
+    });
   });
 });
+
